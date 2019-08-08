@@ -10,6 +10,7 @@
 */
 
 const { ServiceProvider } = require('@adonisjs/fold')
+const path = require("path");
 
 class AppProvider extends ServiceProvider {
   /**
