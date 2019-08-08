@@ -26,7 +26,9 @@ class AppProvider extends ServiceProvider {
     this.app.singleton('Adonis/Src/Env', (app) => {
       const Helpers = app.use('Adonis/Src/Helpers')
       const Env = require('../src/Env')
-      return new Env(Helpers.appRoot())
+      // EMM: Determine if process is loading from EXE
+      // return new Env(Helpers.appRoot())
+      return new Env(process.pkg ? path.dirname(process.execPath) : Helpers.appRoot())
     })
     this.app.alias('Adonis/Src/Env', 'Env')
   }
