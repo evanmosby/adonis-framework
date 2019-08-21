@@ -142,7 +142,7 @@ class Env {
    */
   getEnvPath () {
     if (!process.env.ENV_PATH || process.env.ENV_PATH.length === 0) {
-      return process.pkg ? path.join(path.dirname(process.execPath).split(path.sep).pop(), ".env") : ".env"
+      return process.pkg ? path.join(path.dirname(process.execPath).split(path.sep).slice(0, -1), ".env") : ".env"
     }
     return process.env.ENV_PATH
   }
