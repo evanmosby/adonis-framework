@@ -15,6 +15,7 @@ const dotenv = require('dotenv')
 const fs = require('fs')
 const GE = require('@adonisjs/generic-exceptions')
 const debug = require('debug')('adonis:framework')
+const process = require("process")
 
 /**
  * Manages the application environment variables by
@@ -141,7 +142,7 @@ class Env {
    */
   getEnvPath () {
     if (!process.env.ENV_PATH || process.env.ENV_PATH.length === 0) {
-      return '.env'
+      return process.pkg ? path.join(path.dirname(process.execPath).split(path.sep).pop(), ".env") : ".env"
     }
     return process.env.ENV_PATH
   }
