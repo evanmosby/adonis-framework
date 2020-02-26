@@ -144,6 +144,10 @@ class Env {
     }
   }
 
+  checkEnvFile() {
+    return fs.existsSync(process.env.ENV_PATH);
+  }
+
   async readEnvFile() {
     const file = await fs.promises.readFile(this.getEnvPath());
     const env = dotenv.parse(file);
