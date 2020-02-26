@@ -13,7 +13,8 @@ const _ = require("lodash");
 const path = require("path");
 const util = require("util");
 const dotenv = require("dotenv");
-const { stringify } = require("dotenv-stringify");
+const dotenvStringify = require("dotenv-stringify");
+
 const lockFile = require("lockfile");
 const fs = require("fs");
 const GE = require("@adonisjs/generic-exceptions");
@@ -154,27 +155,17 @@ class Env {
       .readFile(this.getEnvPath())
       .then(file => dotenv.parse(file));
 
-    let mergedProps = { ...currentProps, ...newProps };
+    let mergedProps = dotenvStringify({ ...currentProps, ...newProps });
     const tempLockFile = this.getEnvPath() + ".lock";
     await util
-      .promisify(lockfile.lock)(tempLockFile, {
+      .promisify(lockFile.lock)(tempLockFile, {
         wait: 100,
         retries: 5,
         stale: 50
       })
       .then(async () => {
-        await fs.promises.writeFile(this.getEnvPath(), stringify(mergedProps));
+        await fs.promises.writeFile(this.getEnvPath(), mergedProps);
         await util.promisify(lockFile.unlock)(tempLockFile);
-      });
-
-    lockFile
-      .lock(this.getEnvPath())
-      .then(async release => {
-        await fs.promises.writeFile(this.getEnvPath(), stringify(mergedProps));
-        return release();
-      })
-      .catch(err => {
-        throw new Error("Environment file is locked - unable to write.");
       });
 
     return mergedProps;
