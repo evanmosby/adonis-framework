@@ -1,4 +1,4 @@
-'use strict'
+"use strict";
 
 /**
  * adonis-framework
@@ -7,14 +7,17 @@
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
-*/
+ */
 
-const _ = require('lodash')
-const path = require('path')
-const dotenv = require('dotenv')
-const fs = require('fs')
-const GE = require('@adonisjs/generic-exceptions')
-const debug = require('debug')('adonis:framework')
+const _ = require("lodash");
+const path = require("path");
+const util = require("util");
+const dotenv = require("dotenv");
+const { stringify } = require("dotenv-stringify");
+const lockFile = require("lockfile");
+const fs = require("fs");
+const GE = require("@adonisjs/generic-exceptions");
+const debug = require("debug")("adonis:framework");
 
 /**
  * Manages the application environment variables by
@@ -36,17 +39,17 @@ const debug = require('debug')('adonis:framework')
  * @constructor
  */
 class Env {
-  constructor (appRoot) {
-    this.appRoot = appRoot
-    const bootedAsTesting = process.env.NODE_ENV === 'testing'
-    const env = this.load(this.getEnvPath(), false) // do not overwrite at first place
+  constructor(appRoot) {
+    this.appRoot = appRoot;
+    const bootedAsTesting = process.env.NODE_ENV === "testing";
+    const env = this.load(this.getEnvPath(), false); // do not overwrite at first place
 
     /**
      * Throwing the exception when ENV_SILENT is not set to true
      * and ofcourse there is an error
      */
-    if (env.error && process.env.ENV_SILENT !== 'true') {
-      throw env.error
+    if (env.error && process.env.ENV_SILENT !== "true") {
+      throw env.error;
     }
 
     /**
@@ -54,7 +57,7 @@ class Env {
      * under testing mode
      */
     if (bootedAsTesting) {
-      this.load('.env.testing')
+      this.load(".env.testing");
     }
   }
 
@@ -70,23 +73,24 @@ class Env {
    *
    * @private
    */
-  _interpolate (env, envConfig) {
-    const matches = env.match(/(\\)?\$([a-zA-Z0-9_]+)|(\\)?\${([a-zA-Z0-9_]+)}/g) || []
-    _.each(matches, (match) => {
+  _interpolate(env, envConfig) {
+    const matches =
+      env.match(/(\\)?\$([a-zA-Z0-9_]+)|(\\)?\${([a-zA-Z0-9_]+)}/g) || [];
+    _.each(matches, match => {
       /**
        * Variable is escaped
        */
-      if (match.indexOf('\\') === 0) {
-        env = env.replace(match, match.replace(/^\\\$/, '$'))
-        return
+      if (match.indexOf("\\") === 0) {
+        env = env.replace(match, match.replace(/^\\\$/, "$"));
+        return;
       }
 
-      const key = match.replace(/\$|{|}/g, '')
-      const variable = envConfig[key] || process.env[key] || ''
-      env = env.replace(match, this._interpolate(variable, envConfig))
-    })
+      const key = match.replace(/\$|{|}/g, "");
+      const variable = envConfig[key] || process.env[key] || "";
+      env = env.replace(match, this._interpolate(variable, envConfig));
+    });
 
-    return env
+    return env;
   }
 
   /**
@@ -100,20 +104,28 @@ class Env {
    *
    * @return {Object}
    */
-  load (filePath, overwrite = true, encoding = 'utf8') {
+  load(filePath, overwrite = true, encoding = "utf8") {
     const options = {
-      path: path.isAbsolute(filePath) ? filePath : path.join(this.appRoot, filePath),
+      path: path.isAbsolute(filePath)
+        ? filePath
+        : path.join(this.appRoot, filePath),
       encoding
-    }
+    };
 
     try {
-      const envConfig = dotenv.parse(fs.readFileSync(options.path, options.encoding))
+      const envConfig = dotenv.parse(
+        fs.readFileSync(options.path, options.encoding)
+      );
 
       /**
        * Dotenv doesn't overwrite existing env variables, so we
        * need to do it manaully by parsing the file.
        */
-      debug('%s environment file from %s', overwrite ? 'merging' : 'loading', options.path)
+      debug(
+        "%s environment file from %s",
+        overwrite ? "merging" : "loading",
+        options.path
+      );
 
       /**
        * Loop over values and set them on environment only
@@ -122,13 +134,50 @@ class Env {
        */
       _.each(envConfig, (value, key) => {
         if (process.env[key] === undefined || overwrite) {
-          process.env[key] = this._interpolate(value, envConfig)
+          process.env[key] = this._interpolate(value, envConfig);
         }
-      })
-      return { parsed: envConfig }
+      });
+      return { parsed: envConfig };
     } catch (error) {
-      return { error }
+      return { error };
     }
+  }
+
+  async readEnvFile() {
+    const file = await fs.promises.readFile(this.getEnvPath());
+    const env = dotenv.parse(file);
+    return env;
+  }
+
+  async writeEnvFile(newProps = {}) {
+    const currentProps = await fs.promises
+      .readFile(this.getEnvPath())
+      .then(file => dotenv.parse(file));
+
+    let mergedProps = { ...currentProps, ...newProps };
+    const tempLockFile = this.getEnvPath() + ".lock";
+    await util
+      .promisify(lockfile.lock)(tempLockFile, {
+        wait: 100,
+        retries: 5,
+        stale: 50
+      })
+      .then(async () => {
+        await fs.promises.writeFile(this.getEnvPath(), stringify(mergedProps));
+        await util.promisify(lockFile.unlock)(tempLockFile);
+      });
+
+    lockFile
+      .lock(this.getEnvPath())
+      .then(async release => {
+        await fs.promises.writeFile(this.getEnvPath(), stringify(mergedProps));
+        return release();
+      })
+      .catch(err => {
+        throw new Error("Environment file is locked - unable to write.");
+      });
+
+    return mergedProps;
   }
 
   /**
@@ -139,11 +188,11 @@ class Env {
    *
    * @return {String}
    */
-  getEnvPath () {
+  getEnvPath() {
     if (!process.env.ENV_PATH || process.env.ENV_PATH.length === 0) {
-      return '.env'
+      return ".env";
     }
-    return process.env.ENV_PATH
+    return process.env.ENV_PATH;
   }
 
   /**
@@ -162,8 +211,8 @@ class Env {
    * Env.get('CACHE_VIEWS', false)
    * ```
    */
-  get (key, defaultValue = null) {
-    return _.get(process.env, key, defaultValue)
+  get(key, defaultValue = null) {
+    return _.get(process.env, key, defaultValue);
   }
 
   /**
@@ -181,14 +230,14 @@ class Env {
    * Env.getOrFail('MAIL_PASSWORD')
    * ```
    */
-  getOrFail (key) {
-    const val = _.get(process.env, key)
+  getOrFail(key) {
+    const val = _.get(process.env, key);
 
     if (_.isUndefined(val)) {
-      throw GE.RuntimeException.missingEnvKey(key)
+      throw GE.RuntimeException.missingEnvKey(key);
     }
 
-    return val
+    return val;
   }
 
   /**
@@ -207,9 +256,9 @@ class Env {
    * Env.set('PORT', 3333)
    * ```
    */
-  set (key, value) {
-    _.set(process.env, key, value)
+  set(key, value) {
+    _.set(process.env, key, value);
   }
 }
 
-module.exports = Env
+module.exports = Env;
