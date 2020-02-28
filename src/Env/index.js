@@ -201,7 +201,13 @@ class Env {
    * @return {String}
    */
   getDefaultEnvPath() {
-    return path.join(__dirname, ".env.default");
+    if (
+      !process.env.DEFAULT_ENV_PATH ||
+      process.env.DEFAULT_ENV_PATH.length === 0
+    ) {
+      return ".env.default";
+    }
+    return process.env.DEFAULT_ENV_PATH;
   }
 
   /**
