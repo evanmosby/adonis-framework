@@ -144,8 +144,10 @@ class Env {
     }
   }
 
-  checkEnvFile() {
-    return fs.existsSync(process.env.ENV_PATH);
+  async readDefaultEnvFile() {
+    const file = await fs.promises.readFile(this.getDefaultEnvPath());
+    const env = dotenv.parse(file);
+    return env;
   }
 
   async readEnvFile() {
@@ -188,6 +190,18 @@ class Env {
       return ".env";
     }
     return process.env.ENV_PATH;
+  }
+
+  /**
+   * Returns the path from where the `.env`
+   * file should be loaded.
+   *
+   * @method getEnvPath
+   *
+   * @return {String}
+   */
+  getDefaultEnvPath() {
+    return path.join(__dirname, ".env.default");
   }
 
   /**
