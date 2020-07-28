@@ -1,4 +1,4 @@
-'use strict'
+"use strict";
 
 /**
  * adonis-framework
@@ -7,11 +7,11 @@
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
-*/
+ */
 
-const _ = require('lodash')
-const requireAll = require('require-all')
-const debug = require('debug')('adonis:framework')
+const _ = require("lodash");
+const requireAll = require("require-all");
+const debug = require("debug")("adonis:framework");
 
 /**
  * Manages configuration by recursively reading all
@@ -28,10 +28,11 @@ const debug = require('debug')('adonis:framework')
  * @param {String} configPath Absolute path from where to load the config files from
  */
 class Config {
-  constructor (configPath) {
-    this._configPath = configPath
-    this._config = {}
-    this.syncWithFileSystem()
+  constructor(configPath, Event) {
+    this.Event = Event;
+    this._configPath = configPath;
+    this._config = {};
+    this.syncWithFileSystem();
   }
 
   /**
@@ -44,16 +45,16 @@ class Config {
    *
    * @return {void}
    */
-  syncWithFileSystem () {
+  syncWithFileSystem() {
     try {
       this._config = requireAll({
         dirname: this._configPath,
-        filter: /(.*)\.js$/
-      })
-      debug('loaded all config files from %s', this._configPath)
+        filter: /(.*)\.js$/,
+      });
+      debug("loaded all config files from %s", this._configPath);
     } catch (error) {
-      if (error.code !== 'ENOENT') {
-        throw error
+      if (error.code !== "ENOENT") {
+        throw error;
       }
     }
   }
@@ -81,8 +82,8 @@ class Config {
    * Config.get('database.prodMysql')
    * ```
    */
-  get (key, defaultValue) {
-    return _.get(this._config, key, defaultValue)
+  get(key, defaultValue) {
+    return _.get(this._config, key, defaultValue);
   }
 
   /**
@@ -107,9 +108,9 @@ class Config {
    * })
    * ```
    */
-  merge (key, defaultValues, customizer) {
-    const value = this.get(key, {})
-    return _.mergeWith(defaultValues, value, customizer)
+  merge(key, defaultValues, customizer) {
+    const value = this.get(key, {});
+    return _.mergeWith(defaultValues, value, customizer);
   }
 
   /**
@@ -133,9 +134,12 @@ class Config {
    * Config.get('database.mysql.host')
    * ```
    */
-  set (key, value) {
-    _.set(this._config, key, value)
+  set(key, value, emit = true) {
+    _.set(this._config, key, value);
+    if (emit) {
+      this.Event.emit(`config::set::${key}`, { key, value });
+    }
   }
 }
 
-module.exports = Config
+module.exports = Config;

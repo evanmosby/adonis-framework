@@ -51,12 +51,17 @@ const proxyHandler = {
  * @singleton
  */
 class Event {
-  constructor (Config) {
-    this.emitter = new EventEmitter(Config.merge('app.events', {
+  constructor () {
+    // this.emitter = new EventEmitter(Config.merge('app.events', {
+    //   wildcard: true,
+    //   delimiter: '::',
+    //   newListener: false
+    // }))
+    this.emitter = new EventEmitter({
       wildcard: true,
       delimiter: '::',
       newListener: false
-    }))
+    })
 
     this._fake = null
     this._namespacedListeners = {}

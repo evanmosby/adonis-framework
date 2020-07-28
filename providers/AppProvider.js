@@ -273,7 +273,8 @@ class AppProvider extends ServiceProvider {
   _registerEvent () {
     this.app.singleton('Adonis/Src/Event', (app) => {
       const Event = require('../src/Event')
-      return new Event(app.use('Adonis/Src/Config'))
+     // return new Event(app.use('Adonis/Src/Config'))
+     return new Event()
     })
     this.app.alias('Adonis/Src/Event', 'Event')
   }
@@ -302,6 +303,7 @@ class AppProvider extends ServiceProvider {
    * @return {void}
    */
   register () {
+    this._registerEvent()
     this._registerEnv()
     this._registerConfig()
     this._registerContext()
@@ -317,7 +319,6 @@ class AppProvider extends ServiceProvider {
     this._registerExceptionHandler()
     this._registerEncryption()
     this._registerStaticMiddleware()
-    this._registerEvent()
     this._registerHashTrait()
   }
 
