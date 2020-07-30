@@ -15,10 +15,10 @@ const util = require("util");
 const dotenv = require("dotenv");
 const dotenvStringify = require("dotenv-stringify");
 
-const fs = require('fs')
-const GE = require('@adonisjs/generic-exceptions')
-const debug = require('debug')('adonis:framework')
-const process = require("process")
+const fs = require("fs");
+const GE = require("@adonisjs/generic-exceptions");
+const debug = require("debug")("adonis:framework");
+const process = require("process");
 const lockFile = require("lockfile");
 
 /**
@@ -78,7 +78,7 @@ class Env {
   _interpolate(env, envConfig) {
     const matches =
       env.match(/(\\)?\$([a-zA-Z0-9_]+)|(\\)?\${([a-zA-Z0-9_]+)}/g) || [];
-    _.each(matches, match => {
+    _.each(matches, (match) => {
       /**
        * Variable is escaped
        */
@@ -111,7 +111,7 @@ class Env {
       path: path.isAbsolute(filePath)
         ? filePath
         : path.join(this.appRoot, filePath),
-      encoding
+      encoding,
     };
 
     try {
@@ -158,22 +158,28 @@ class Env {
   }
 
   async writeEnvFile(newProps = {}) {
-    const currentProps = await fs.promises
-      .readFile(this.getEnvPath())
-      .then(file => dotenv.parse(file));
-
-    let mergedProps = dotenvStringify({ ...currentProps, ...newProps });
-    const tempLockFile = this.getEnvPath() + ".lock";
-    await util
-      .promisify(lockFile.lock)(tempLockFile, {
-        wait: 100,
-        retries: 5,
-        stale: 50
-      })
-      .then(async () => {
-        await fs.promises.writeFile(this.getEnvPath(), mergedProps);
-        await util.promisify(lockFile.unlock)(tempLockFile);
+    const currentProps = await this.readEnvFile();
+    const mergedProps = { ...currentProps, ...newProps };
+    const orderedProps = {};
+    Object.keys(mergedProps)
+      .sort()
+      .forEach(function (key) {
+        orderedProps[key] = mergedProps[key];
       });
+    const tempLockFile = this.getEnvPath() + ".lock";
+
+    await util.promisify(lockFile.lock)(tempLockFile, {
+      retries: 6,
+      retryWait: 100,
+      stale: 500,
+    });
+
+    await fs.promises.writeFile(
+      this.getEnvPath(),
+      dotenvStringify(orderedProps)
+    );
+
+    await util.promisify(lockFile.unlock)(tempLockFile);
 
     return mergedProps;
   }
@@ -188,7 +194,16 @@ class Env {
    */
   getEnvPath() {
     if (!process.env.ENV_PATH || process.env.ENV_PATH.length === 0) {
-      return process.pkg ? path.join(path.dirname(process.execPath).split(path.sep).slice(0, -1).join(path.sep), ".env") : ".env"
+      return process.pkg
+        ? path.join(
+            path
+              .dirname(process.execPath)
+              .split(path.sep)
+              .slice(0, -1)
+              .join(path.sep),
+            ".env"
+          )
+        : ".env";
     }
     return process.env.ENV_PATH;
   }

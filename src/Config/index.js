@@ -109,8 +109,13 @@ class Config {
    * ```
    */
   merge(key, defaultValues, customizer) {
-    const value = this.get(key, {});
-    return _.mergeWith(defaultValues, value, customizer);
+    const current = this.get(key, {});
+    return _.mergeWith(defaultValues, current, customizer);
+  }
+
+  mergeOver(key, newValues, customizer) {
+    const current = this.get(key, {});
+    return _.mergeWith(current, newValues, customizer);
   }
 
   /**
@@ -137,7 +142,7 @@ class Config {
   set(key, value, emit = true) {
     _.set(this._config, key, value);
     if (emit) {
-      this.Event.emit(`config::set::${key}`, { key, value });
+      this.Event.emit("config::set", { key, value });
     }
   }
 }

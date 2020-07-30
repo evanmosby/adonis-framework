@@ -48,7 +48,8 @@ class AppProvider extends ServiceProvider {
     this.app.singleton('Adonis/Src/Config', (app) => {
       const Helpers = app.use('Adonis/Src/Helpers')
       const Config = require('../src/Config')
-      return new Config(Helpers.configPath())
+      const Event = app.use('Adonis/Src/Event')
+      return new Config(Helpers.configPath(),Event)
     })
     this.app.alias('Adonis/Src/Config', 'Config')
   }
