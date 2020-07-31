@@ -158,6 +158,13 @@ class Env {
   }
 
   async writeEnvFile(newProps = {}) {
+    const tempLockFile = this.getEnvPath() + ".lock";
+
+    await util.promisify(lockFile.lock)(tempLockFile, {
+      retries: 6,
+      retryWait: 100,
+      stale: 500,
+    });
     const currentProps = await this.readEnvFile();
     const mergedProps = { ...currentProps, ...newProps };
     const orderedProps = {};
@@ -166,13 +173,6 @@ class Env {
       .forEach(function (key) {
         orderedProps[key] = mergedProps[key];
       });
-    const tempLockFile = this.getEnvPath() + ".lock";
-
-    await util.promisify(lockFile.lock)(tempLockFile, {
-      retries: 6,
-      retryWait: 100,
-      stale: 500,
-    });
 
     await fs.promises.writeFile(
       this.getEnvPath(),
@@ -181,7 +181,7 @@ class Env {
 
     await util.promisify(lockFile.unlock)(tempLockFile);
 
-    return mergedProps;
+    return orderedProps;
   }
 
   /**
