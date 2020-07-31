@@ -145,6 +145,14 @@ class Config {
       this.Event.emit("config::set", { key, value });
     }
   }
+
+  delete(key, emit = true) {
+    const value = this.get(key);
+    _.unset(this._config, key);
+    if (emit) {
+      this.Event.emit("config::delete", { key, value });
+    }
+  }
 }
 
 module.exports = Config;
