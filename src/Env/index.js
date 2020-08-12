@@ -161,9 +161,9 @@ class Env {
     const tempLockFile = this.getEnvPath() + ".lock";
 
     await util.promisify(lockFile.lock)(tempLockFile, {
-      retries: 6,
-      retryWait: 100,
-      stale: 500,
+      retries: 50,
+      retryWait: 50,
+      stale: 250,
     });
     const currentProps = await this.readEnvFile();
     const mergedProps = { ...currentProps, ...newProps };
