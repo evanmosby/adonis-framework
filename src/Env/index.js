@@ -146,13 +146,15 @@ class Env {
   }
 
   async readDefaultEnvFile() {
-    const file = await fs.promises.readFile(this.getDefaultEnvPath());
+    //const file = await fs.promises.readFile(this.getDefaultEnvPath());
+    const file = await util.promisify(fs.readFile)(this.getDefaultEnvPath());
     const env = dotenv.parse(file);
     return env;
   }
 
   async readEnvFile() {
-    const file = await fs.promises.readFile(this.getEnvPath());
+    // const file = await fs.promises.readFile(this.getEnvPath());
+    const file = await util.promisify(fs.readFile)(this.getEnvPath());
     const env = dotenv.parse(file);
     return env;
   }
@@ -174,7 +176,11 @@ class Env {
         orderedProps[key] = mergedProps[key];
       });
 
-    await fs.promises.writeFile(
+    // await fs.promises.writeFile(
+    //   this.getEnvPath(),
+    //   dotenvStringify(orderedProps)
+    // );
+    await util.promisify(fs.writeFile)(
       this.getEnvPath(),
       dotenvStringify(orderedProps)
     );
