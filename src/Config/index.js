@@ -140,17 +140,18 @@ class Config {
    * ```
    */
   set(key, value, emit = true) {
+    const oldValue = this.get(key);
     _.set(this._config, key, value);
     if (emit) {
-      this.Event.emit("config::set", { key, value });
+      this.Event.emit("config::set", { key, value, oldValue });
     }
   }
 
   delete(key, emit = true) {
-    const value = this.get(key);
+    const oldValue = this.get(key);
     _.unset(this._config, key);
     if (emit) {
-      this.Event.emit("config::delete", { key, value });
+      this.Event.emit("config::delete", { key, oldValue });
     }
   }
 }
