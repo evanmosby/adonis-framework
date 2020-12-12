@@ -45,6 +45,7 @@ class Env {
     this.appRoot = appRoot;
     const bootedAsTesting = process.env.NODE_ENV === "testing";
     const env = this.load(this.getEnvPath(), false); // do not overwrite at first place
+    this._defaults = this.readDefaultEnvFile()
 
     /**
      * Throwing the exception when ENV_SILENT is not set to true
@@ -61,6 +62,10 @@ class Env {
     if (bootedAsTesting) {
       this.load(".env.testing");
     }
+  }
+
+  get defaults() {
+    return this._defaults
   }
 
   /**
@@ -145,11 +150,12 @@ class Env {
     }
   }
 
-  async readDefaultEnvFile() {
+  readDefaultEnvFile() {
     //const file = await fs.promises.readFile(this.getDefaultEnvPath());
-    const file = await util.promisify(fs.readFile)(this.getDefaultEnvPath());
-    const env = dotenv.parse(file);
-    return env;
+    const envConfig = dotenv.parse(
+      fs.readFileSync(this.getDefaultEnvPath(), "utf8")
+    );
+    return envConfig;
   }
 
   async readEnvFile() {
@@ -202,13 +208,13 @@ class Env {
     if (!process.env.ENV_PATH || process.env.ENV_PATH.length === 0) {
       return process.pkg
         ? path.join(
-            path
-              .dirname(process.execPath)
-              .split(path.sep)
-              .slice(0, -1)
-              .join(path.sep),
-            ".env"
-          )
+          path
+            .dirname(process.execPath)
+            .split(path.sep)
+            .slice(0, -1)
+            .join(path.sep),
+          ".env"
+        )
         : ".env";
     }
     return process.env.ENV_PATH;
