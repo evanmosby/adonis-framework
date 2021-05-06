@@ -38,6 +38,23 @@ class Encryption {
   }
 
   /**
+   * @description Sets a new appKey
+   * @param {string} appKey appKey
+   * @param {Object} options Encryptor options
+   */
+   resetAppKey(appKey, options) {
+    /**
+     * Throw exception when app key doesn't exists.
+     */
+     if (!appKey) {
+      throw GE.RuntimeException.missingAppKey('Encryption')
+    }
+
+    this.appKey = appKey
+    this.encryptor = Encryptor(Object.assign({ key: appKey }, options))
+  }
+
+  /**
    * Returns a new instance of encrypter with different options
    *
    * @method getInstance
