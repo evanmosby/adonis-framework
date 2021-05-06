@@ -37,7 +37,12 @@ class Encryption {
     this.encryptor = Encryptor(Object.assign({ key: appKey }, options))
   }
 
-  resetAppKey(appKey, options) {
+  /**
+   * @description Sets a new appKey
+   * @param {string} appKey appKey
+   * @param {Object} options Encryptor options
+   */
+   resetAppKey(appKey, options) {
     /**
      * Throw exception when app key doesn't exists.
      */
