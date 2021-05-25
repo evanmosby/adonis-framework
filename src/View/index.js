@@ -44,6 +44,8 @@ class View {
       cache: String(Config.get("app.views.cache", false)) === "true",
     });
     if (Config.get("app.views.path")) {
+      edge.registerViews(Config.get("app.views.path"));
+
       const configViewsPath = path.join(Config.get("app.views.path"), "emails");
       const resourceViewsPath = path.join(
         process.cwd(),
@@ -51,8 +53,6 @@ class View {
         "views",
         "emails"
       );
-
-      edge.registerViews(configViewsPath);
 
       const resourceViews = fs.readdirSync(resourceViewsPath);
       for (const view of resourceViews) {
