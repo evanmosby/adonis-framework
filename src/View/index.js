@@ -11,6 +11,9 @@
 
 const edge = require("edge.js");
 const BasePresenter = edge.BasePresenter;
+const fs = require("fs");
+const process = require("process");
+var path = require("path");
 
 /**
  * View engine to be used for rendering views. It makes
@@ -40,7 +43,36 @@ class View {
     edge.configure({
       cache: String(Config.get("app.views.cache", false)) === "true",
     });
-    edge.registerViews(Config.get("app.views.path", Helpers.viewsPath()));
+    if (Config.get("app.views.path")) {
+      const configViewsPath = path.join(Config.get("app.views.path"), "emails");
+      const resourceViewsPath = path.join(
+        process.cwd(),
+        "resources",
+        "views",
+        "emails"
+      );
+
+      edge.registerViews(configViewsPath);
+
+      const resourceViews = fs.readdirSync(resourceViewsPath);
+      for (const view of resourceViews) {
+        if (!fs.existsSync(path.join(configViewsPath, view))) {
+          fs.copyFileSync(
+            path.join(resourceViewsPath, view),
+            path.join(configViewsPath, view)
+          );
+        }
+      }
+    } else {
+      edge.registerViews(Helpers.viewPath());
+    }
+
+    // else
+    //  edge.registerViews(Helpers.viewsPath())
+
+    //let agmFiles = await fs.readdir(path.join(Config.get("app.views.path"),"emails"))
+
+    // edge.registerViews(Config.get("app.views.path", Helpers.viewsPath()));
     edge.registerPresenters(Helpers.resourcesPath("presenters"));
     this.engine = edge;
   }
