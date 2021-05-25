@@ -1,4 +1,4 @@
-'use strict'
+"use strict";
 
 /*
  * adonis-framework
@@ -7,10 +7,10 @@
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
-*/
+ */
 
-const edge = require('edge.js')
-const BasePresenter = edge.BasePresenter
+const edge = require("edge.js");
+const BasePresenter = edge.BasePresenter;
 
 /**
  * View engine to be used for rendering views. It makes
@@ -36,13 +36,13 @@ const BasePresenter = edge.BasePresenter
  * ```
  */
 class View {
-  constructor (Helpers, cacheViews = false) {
+  constructor(Helpers, Config) {
     edge.configure({
-      cache: String(cacheViews) === 'true'
-    })
-    edge.registerViews(Helpers.viewsPath())
-    edge.registerPresenters(Helpers.resourcesPath('presenters'))
-    this.engine = edge
+      cache: String(Config.get("app.views.cache", false)) === "true",
+    });
+    edge.registerViews(Config.get("app.views.path", Helpers.viewsPath()));
+    edge.registerPresenters(Helpers.resourcesPath("presenters"));
+    this.engine = edge;
   }
 
   /**
@@ -51,8 +51,8 @@ class View {
    *
    * @attribute BasePresenter
    */
-  get BasePresenter () {
-    return BasePresenter
+  get BasePresenter() {
+    return BasePresenter;
   }
 
   /**
@@ -68,8 +68,8 @@ class View {
    *
    * @return {void}
    */
-  global (...params) {
-    return this.engine.global(...params)
+  global(...params) {
+    return this.engine.global(...params);
   }
 
   /**
@@ -85,8 +85,8 @@ class View {
    *
    * @return {Object}
    */
-  share (...params) {
-    return this.engine.share(...params)
+  share(...params) {
+    return this.engine.share(...params);
   }
 
   /**
@@ -101,8 +101,8 @@ class View {
    *
    * @return {String}
    */
-  render (...params) {
-    return this.engine.render(...params)
+  render(...params) {
+    return this.engine.render(...params);
   }
 
   /**
@@ -117,8 +117,8 @@ class View {
    *
    * @return {String}
    */
-  renderString (...params) {
-    return this.engine.renderString(...params)
+  renderString(...params) {
+    return this.engine.renderString(...params);
   }
 
   /**
@@ -130,8 +130,8 @@ class View {
    *
    * @return {Object}
    */
-  presenter (...params) {
-    return this.engine.presenter(...params)
+  presenter(...params) {
+    return this.engine.presenter(...params);
   }
 
   /**
@@ -143,9 +143,9 @@ class View {
    *
    * @return {void}
    */
-  tag (...params) {
-    this.engine.tag(...params)
+  tag(...params) {
+    this.engine.tag(...params);
   }
 }
 
-module.exports = View
+module.exports = View;
