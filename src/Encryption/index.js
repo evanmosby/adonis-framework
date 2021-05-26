@@ -25,7 +25,17 @@ const GE = require('@adonisjs/generic-exceptions')
  * @constructor
  */
 class Encryption {
-  constructor (appKey, options) {
+  /**
+   * 
+   * @param {Object} Config 
+   * @param {Object} options ?
+   * @param {Object} Event Event provider
+   */
+  constructor (Config, options, Event) {
+    this.Config = Config;
+    this.Event = Event;
+
+    const appKey = this.Config.get('app.appKey');
     /**
      * Throw exception when app key doesn't exists.
      */
@@ -35,14 +45,19 @@ class Encryption {
 
     this.appKey = appKey
     this.encryptor = Encryptor(Object.assign({ key: appKey }, options))
+
+    this.Event.on('encryption::resetappkey', () => {
+      this.resetAppKey(undefined, false);
+    });
   }
 
   /**
    * @description Sets a new appKey
-   * @param {string} appKey appKey
    * @param {Object} options Encryptor options
+   * @param {Boolean} emit Send event
    */
-   resetAppKey(appKey, options) {
+   resetAppKey(options = {}, emit = true) {
+    const appKey = this.Config.get('app.appKey');
     /**
      * Throw exception when app key doesn't exists.
      */
@@ -52,6 +67,10 @@ class Encryption {
 
     this.appKey = appKey
     this.encryptor = Encryptor(Object.assign({ key: appKey }, options))
+
+    if (emit) {
+      this.Event.fire('encryption::resetappkey', { options });
+    }
   }
 
   /**

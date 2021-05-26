@@ -257,8 +257,9 @@ class AppProvider extends ServiceProvider {
   _registerEncryption () {
     this.app.singleton('Adonis/Src/Encryption', (app) => {
       const Encryption = require('../src/Encryption')
-      const appKey = app.use('Adonis/Src/Config').get('app.appKey')
-      return new Encryption(appKey)
+      const Config = app.use('Adonis/Src/Config');
+      const Event = app.use('Adonis/Src/Event');
+      return new Encryption(Config, undefined, Event)
     })
     this.app.alias('Adonis/Src/Encryption', 'Encryption')
   }
