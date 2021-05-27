@@ -66,13 +66,6 @@ class View {
     } else {
       edge.registerViews(Helpers.viewPath());
     }
-
-    // else
-    //  edge.registerViews(Helpers.viewsPath())
-
-    //let agmFiles = await fs.readdir(path.join(Config.get("app.views.path"),"emails"))
-
-    // edge.registerViews(Config.get("app.views.path", Helpers.viewsPath()));
     edge.registerPresenters(Helpers.resourcesPath("presenters"));
     this.engine = edge;
   }
