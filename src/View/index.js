@@ -64,7 +64,7 @@ class View {
         }
       }
     } else {
-      edge.registerViews(Helpers.viewPath());
+      edge.registerViews(Helpers.viewsPath());
     }
     edge.registerPresenters(Helpers.resourcesPath("presenters"));
     this.engine = edge;
