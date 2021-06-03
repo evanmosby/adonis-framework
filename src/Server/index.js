@@ -375,7 +375,6 @@ class Server {
    * @return {Object}
    */
   getHttpsInstance(pfxPath, pfxPassphrase) {
-    console.log(pfxPath, pfxPassphrase);
     if (!this._httpsInstance) {
       const options = {
         pfx: fs.readFileSync(pfxPath),
