@@ -191,6 +191,7 @@ class Env {
       dotenvStringify(orderedProps)
     );
 
+    this.load(this.getEnvPath(), false);
     await util.promisify(lockFile.unlock)(tempLockFile);
 
     return orderedProps;
