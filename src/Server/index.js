@@ -9,12 +9,13 @@
  * file that was distributed with this source code.
 */
 
-const http = require('http')
-const { resolver, ioc } = require('@adonisjs/fold')
-const debug = require('debug')('adonis:framework')
-const GE = require('@adonisjs/generic-exceptions')
-const fs = require('fs')
-const MiddlewareBase = require('@adonisjs/middleware-base')
+const http = require("http");
+const https = require("https");
+const { resolver, ioc } = require("@adonisjs/fold");
+const debug = require("debug")("adonis:framework");
+const GE = require("@adonisjs/generic-exceptions");
+const fs = require("fs");
+const MiddlewareBase = require("@adonisjs/middleware-base");
 
 /**
  * The HTTP server class to start a new server and bind
@@ -30,15 +31,19 @@ const MiddlewareBase = require('@adonisjs/middleware-base')
  * @class Server
  */
 class Server {
-  constructor (Context, Route, Logger, Exception) {
-    this.Context = Context
-    this.Route = Route
-    this.Logger = Logger
-    this.Exception = Exception
+  constructor(Context, Route, Logger, Exception) {
+    this.Context = Context;
+    this.Route = Route;
+    this.Logger = Logger;
+    this.Exception = Exception;
 
-    this._httpInstance = null
-    this._exceptionHandlerNamespace = null
-    this._middleware = new MiddlewareBase('handle', this.Logger.warning.bind(this.Logger))
+    this._httpInstance = null;
+    this._httpsInstance = null;
+    this._exceptionHandlerNamespace = null;
+    this._middleware = new MiddlewareBase(
+      "handle",
+      this.Logger.warning.bind(this.Logger)
+    );
   }
 
   /**
@@ -350,23 +355,42 @@ class Server {
    * Returns the http server instance. Also one can set
    * a custom http instance.
    *
-   * @method getInstance
+   * @method getHttpInstance
    *
    * @return {Object}
    */
-  getInstance () {
+  getHttpInstance() {
     if (!this._httpInstance) {
-      this._httpInstance = http.createServer(this.handle.bind(this))
+      this._httpInstance = http.createServer(this.handle.bind(this));
     }
+    return this._httpInstance;
+  }
 
-    return this._httpInstance
+  /**
+   * Returns the https server instance. Also one can set
+   * a custom http instance.
+   *
+   * @method getHttpsInstance
+   *
+   * @return {Object}
+   */
+  getHttpsInstance(pfxPath, pfxPassphrase) {
+    console.log(pfxPath, pfxPassphrase);
+    if (!this._httpsInstance) {
+      const options = {
+        pfx: fs.readFileSync(pfxPath),
+        passphrase: pfxPassphrase,
+      };
+      this._httpsInstance = https.createServer(options, this.handle.bind(this));
+    }
+    return this._httpsInstance;
   }
 
   /**
    * Set a custom http instance instead of using
    * the default one
    *
-   * @method setInstance
+   * @method setHttpInstance
    *
    * @param  {Object}    httpInstance
    *
@@ -374,15 +398,46 @@ class Server {
    *
    * @example
    * ```js
-   * const https = require('https')
-   * Server.setInstance(https)
+   * const http = require('http')
+   * Server.setHttpInstance(http)
    * ```
    */
-  setInstance (httpInstance) {
+  setHttpInstance(httpInstance) {
     if (this._httpInstance) {
-      throw GE.RuntimeException.invoke('Attempt to hot swap http instance failed. Make sure to call Server.setInstance before starting the http server', 500, 'E_CANNOT_SWAP_SERVER')
+      throw GE.RuntimeException.invoke(
+        "Attempt to hot swap http instance failed. Make sure to call Server.setHttpInstance before starting the http server",
+        500,
+        "E_CANNOT_SWAP_SERVER"
+      );
     }
-    this._httpInstance = httpInstance
+    this._httpInstance = httpInstance;
+  }
+
+  /**
+   * Set a custom http instance instead of using
+   * the default one
+   *
+   * @method setHttpsInstance
+   *
+   * @param  {Object}    httpsInstance
+   *
+   * @return {void}
+   *
+   * @example
+   * ```js
+   * const https = require('https')
+   * Server.setHttpsInstance(https)
+   * ```
+   */
+  setHttpsInstance(httpInstance) {
+    if (this._httpsInstance) {
+      throw GE.RuntimeException.invoke(
+        "Attempt to hot swap https instance failed. Make sure to call Server.setHttpsInstance before starting the https server",
+        500,
+        "E_CANNOT_SWAP_SERVER"
+      );
+    }
+    this._httpsInstance = httpsInstance;
   }
 
   /**
@@ -472,11 +527,41 @@ class Server {
    */
   httpListen(host = "localhost", port = 80, callback) {
     if (!this._exceptionHandlerNamespace) {
-      this.bindExceptionHandler()
+      this.bindExceptionHandler();
     }
 
-    this.Logger.info('serving app on http://%s:%s', host, port)
-    return this.getInstance().listen(port, host, callback)
+    this.Logger.info(`serving app on http://${host}:${port}`);
+    return this.getHttpInstance().listen(port, host, callback);
+  }
+
+  /**
+   * Listen on given host and port.
+   *
+   * @method listen
+   *
+   * @param  {String}   [host = localhost]
+   * @param  {Number}   [port = 3333]
+   * @param  {Function} [callback]
+   *
+   * @return {Object}
+   */
+  httpsListen(
+    host = "localhost",
+    port = 443,
+    pfxPath,
+    pfxPassphrase,
+    callback
+  ) {
+    if (!this._exceptionHandlerNamespace) {
+      this.bindExceptionHandler();
+    }
+
+    this.Logger.info(`serving app on https://${host}:${port}`);
+    return this.getHttpsInstance(pfxPath, pfxPassphrase).listen(
+      port,
+      host,
+      callback
+    );
   }
 
   /**
@@ -488,9 +573,22 @@ class Server {
    *
    * @return {void}
    */
-  close (callback) {
-    this.getInstance().close(callback)
+  httpClose(callback) {
+    this.getHttpsInstance().close(callback);
+  }
+
+  /**
+   * Closes the HTTPS server
+   *
+   * @method close
+   *
+   * @param  {Function} callback
+   *
+   * @return {void}
+   */
+  httpsClose(callback) {
+    this.getHttpsInstance().close(callback);
   }
 }
 
-module.exports = Server
+module.exports = Server;
