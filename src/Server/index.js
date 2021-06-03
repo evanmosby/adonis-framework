@@ -470,7 +470,7 @@ class Server {
    *
    * @return {Object}
    */
-  listen (host = 'localhost', port = 3333, callback) {
+  httpListen(host = "localhost", port = 80, callback) {
     if (!this._exceptionHandlerNamespace) {
       this.bindExceptionHandler()
     }
