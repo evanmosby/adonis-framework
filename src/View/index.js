@@ -12,7 +12,6 @@
 const edge = require("edge.js");
 const BasePresenter = edge.BasePresenter;
 const fs = require("fs");
-const process = require("process");
 var path = require("path");
 
 /**
@@ -43,31 +42,32 @@ class View {
     edge.configure({
       cache: String(Config.get("app.views.cache", false)) === "true",
     });
-    if (Config.get("app.views.path")) {
-      edge.registerViews(Config.get("app.views.path"));
 
-      const configViewsPath = path.join(Config.get("app.views.path"), "emails");
-      const resourceViewsPath = path.join(
-        process.cwd(),
-        "resources",
-        "views",
-        "emails"
-      );
+    const source = Helpers.viewsPath();
+    const target = Config.get("app.views.path");
 
-      const resourceViews = fs.readdirSync(resourceViewsPath);
-      for (const view of resourceViews) {
-        if (!fs.existsSync(path.join(configViewsPath, view))) {
-          fs.copyFileSync(
-            path.join(resourceViewsPath, view),
-            path.join(configViewsPath, view)
-          );
-        }
-      }
+    // If app.views.path is defined in Config, use this and copy files out to it for use
+    if (source && path.relative(source, target).length > 0) {
+      edge.registerViews(target);
+      this._copyFolderSync(source, target);
     } else {
-      edge.registerViews(Helpers.viewsPath());
+      edge.registerViews(source);
     }
+
     edge.registerPresenters(Helpers.resourcesPath("presenters"));
     this.engine = edge;
+  }
+
+  _copyFolderSync(from, to) {
+    if (!fs.existsSync(to)) fs.mkdirSync(to);
+    fs.readdirSync(from).forEach((element) => {
+      if (fs.lstatSync(path.join(from, element)).isFile()) {
+        if (!fs.existsSync(path.join(to, element)))
+          fs.copyFileSync(path.join(from, element), path.join(to, element));
+      } else {
+        this._copyFolderSync(path.join(from, element), path.join(to, element));
+      }
+    });
   }
 
   /**
