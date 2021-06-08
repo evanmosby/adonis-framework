@@ -62,8 +62,10 @@ class View {
     if (!fs.existsSync(to)) fs.mkdirSync(to);
     fs.readdirSync(from).forEach((element) => {
       if (fs.lstatSync(path.join(from, element)).isFile()) {
-        if (!fs.existsSync(path.join(to, element)))
-          fs.copyFileSync(path.join(from, element), path.join(to, element));
+        if (!fs.existsSync(path.join(to, element))){
+          const fileBuffer = fs.readFileSync(path.join(from, element))
+          fs.writeFileSync(path.join(to, element), fileBuffer)
+        }
       } else {
         this._copyFolderSync(path.join(from, element), path.join(to, element));
       }
