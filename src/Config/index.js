@@ -83,7 +83,7 @@ class Config {
    * ```
    */
   get(key, defaultValue) {
-    return _.get(this._config, key, defaultValue);
+    return _.clone(_.get(this._config, key, defaultValue));
   }
 
   /**
