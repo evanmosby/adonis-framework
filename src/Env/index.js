@@ -20,6 +20,7 @@ const GE = require("@adonisjs/generic-exceptions");
 const debug = require("debug")("adonis:framework");
 const process = require("process");
 const lockFile = require("lockfile");
+const dotenvParseVariables = require("dotenv-parse-variables");
 
 /**
  * Manages the application environment variables by
@@ -45,7 +46,7 @@ class Env {
     this.appRoot = appRoot;
     const bootedAsTesting = process.env.NODE_ENV === "testing";
     const env = this.load(this.getEnvPath(), false); // do not overwrite at first place
-    this._defaults = this.readDefaultEnvFile()
+    this._defaults = this.readDefaultEnvFile();
 
     /**
      * Throwing the exception when ENV_SILENT is not set to true
@@ -65,7 +66,7 @@ class Env {
   }
 
   get defaults() {
-    return this._defaults
+    return this._defaults;
   }
 
   /**
@@ -120,10 +121,9 @@ class Env {
     };
 
     try {
-      const envConfig = dotenv.parse(
+      let envConfig = dotenv.parse(
         fs.readFileSync(options.path, options.encoding)
       );
-
       /**
        * Dotenv doesn't overwrite existing env variables, so we
        * need to do it manaully by parsing the file.
@@ -209,13 +209,13 @@ class Env {
     if (!process.env.ENV_PATH || process.env.ENV_PATH.length === 0) {
       return process.pkg
         ? path.join(
-          path
-            .dirname(process.execPath)
-            .split(path.sep)
-            .slice(0, -1)
-            .join(path.sep),
-          ".env"
-        )
+            path
+              .dirname(process.execPath)
+              .split(path.sep)
+              .slice(0, -1)
+              .join(path.sep),
+            ".env"
+          )
         : ".env";
     }
     return process.env.ENV_PATH;
@@ -256,7 +256,12 @@ class Env {
    * ```
    */
   get(key, defaultValue = null) {
-    return _.get(process.env, key, defaultValue);
+    let ret = _.get(process.env, key, defaultValue);
+    if (ret === null || ret == "") {
+      return null;
+    }
+    let { val } = dotenvParseVariables({ key, val: ret });
+    return val;
   }
 
   /**

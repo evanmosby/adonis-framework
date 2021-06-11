@@ -52,6 +52,7 @@
     "co-compose": "^4.0.0",
     "debug": "^4.1.1",
     "dotenv": "^6.2.0",
+    "dotenv-parse-variables": "^2.0.0",
     "dotenv-stringify": "^2.0.1",
     "edge.js": "^1.1.4",
     "eventemitter2": "^5.0.1",
