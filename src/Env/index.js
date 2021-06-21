@@ -46,7 +46,7 @@ class Env {
     this.appRoot = appRoot;
     const bootedAsTesting = process.env.NODE_ENV === "testing";
     const env = this.load(this.getEnvPath(), false); // do not overwrite at first place
-    this._defaults = this.readDefaultEnvFile();
+    this._defaults=this.readDefaultEnvFile()
 
     /**
      * Throwing the exception when ENV_SILENT is not set to true
@@ -155,7 +155,19 @@ class Env {
     const envConfig = dotenv.parse(
       fs.readFileSync(this.getDefaultEnvPath(), "utf8")
     );
+    for(const [key,value] of Object.entries(envConfig)){
+      envConfig[key]=this._parseVariables(key,value)
+    }
     return envConfig;
+  }
+
+  _parseVariables(key,value){
+    if (value === null || value === "") {
+      return null
+    }else{
+      let { val } = dotenvParseVariables({ key, val: value });
+      return val
+    }
   }
 
   async readEnvFile() {
@@ -257,11 +269,7 @@ class Env {
    */
   get(key, defaultValue = null) {
     let ret = _.get(process.env, key, defaultValue);
-    if (ret === null || ret == "") {
-      return null;
-    }
-    let { val } = dotenvParseVariables({ key, val: ret });
-    return val;
+    return this._parseVariables(key,ret)
   }
 
   /**
