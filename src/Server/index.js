@@ -37,6 +37,7 @@ class Server {
     this.Logger = Logger;
     this.Exception = Exception;
 
+    this._httpClusterWorkerInstance = null;
     this._httpInstance = null;
     this._httpsInstance = null;
     this._exceptionHandlerNamespace = null;
@@ -351,6 +352,21 @@ class Server {
     return this
   }
 
+   /**
+   * Returns the http server instance. Also one can set
+   * a custom http instance.
+   *
+   * @method getHttpClusterWorkerInstance
+   *
+   * @return {Object}
+   */
+    getHttpClusterWorkerInstance() {
+      if (!this._httpClusterWorkerInstance) {
+        this._httpClusterWorkerInstance = http.createServer(this.handle.bind(this));
+      }
+      return this._httpClusterWorkerInstance;
+    }
+
   /**
    * Returns the http server instance. Also one can set
    * a custom http instance.
@@ -383,6 +399,33 @@ class Server {
       this._httpsInstance = https.createServer(options, this.handle.bind(this));
     }
     return this._httpsInstance;
+  }
+
+  /**
+   * Set a custom http instance instead of using
+   * the default one
+   *
+   * @method setHttpClusterWorkerInstance
+   *
+   * @param  {Object}    httpInstance
+   *
+   * @return {void}
+   *
+   * @example
+   * ```js
+   * const http = require('http')
+   * Server.setHttpInstance(http)
+   * ```
+   */
+  setHttpClusterWorkerInstance(httpClusterWorkerInstance) {
+    if (this._httpClusterWorkerInstance) {
+      throw GE.RuntimeException.invoke(
+        "Attempt to hot swap http instance failed. Make sure to call Server.setHttpInstance before starting the http server",
+        500,
+        "E_CANNOT_SWAP_SERVER"
+      );
+    }
+    this._httpClusterWorkerInstance = httpClusterWorkerInstance;
   }
 
   /**
@@ -428,7 +471,7 @@ class Server {
    * Server.setHttpsInstance(https)
    * ```
    */
-  setHttpsInstance(httpInstance) {
+  setHttpsInstance(httpsInstance) {
     if (this._httpsInstance) {
       throw GE.RuntimeException.invoke(
         "Attempt to hot swap https instance failed. Make sure to call Server.setHttpsInstance before starting the https server",
@@ -524,6 +567,26 @@ class Server {
    *
    * @return {Object}
    */
+  httpClusterWorkerListen(host = "localhost", port = 81, callback) {
+    if (!this._exceptionHandlerNamespace) {
+      this.bindExceptionHandler();
+    }
+
+    this.Logger.info(`serving app on http://${host}:${port}`);
+    return this.getHttpClusterWorkerInstance().listen(port, host, callback);
+  }
+
+  /**
+   * Listen on given host and port.
+   *
+   * @method listen
+   *
+   * @param  {String}   [host = localhost]
+   * @param  {Number}   [port = 3333]
+   * @param  {Function} [callback]
+   *
+   * @return {Object}
+   */
   httpListen(host = "localhost", port = 80, callback) {
     if (!this._exceptionHandlerNamespace) {
       this.bindExceptionHandler();
@@ -572,8 +635,21 @@ class Server {
    *
    * @return {void}
    */
+  httpClusterWorkerClose(callback) {
+    this.getHttpClusterWorkerInstance().close(callback);
+  }
+
+  /**
+   * Closes the HTTP server
+   *
+   * @method close
+   *
+   * @param  {Function} callback
+   *
+   * @return {void}
+   */
   httpClose(callback) {
-    this.getHttpsInstance().close(callback);
+    this.getHttpInstance().close(callback);
   }
 
   /**
