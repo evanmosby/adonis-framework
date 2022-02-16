@@ -70,7 +70,6 @@
     "resetable": "^1.0.3",
     "serve-static": "^1.13.2",
     "simple-encryptor": "^3.0.0",
-    "useragent": "^2.3.0",
     "winston": "^3.2.1",
     "youch": "^2.0.10"
   },

@@ -28,7 +28,6 @@ const _ = require('lodash')
 const nodeReq = require('node-req')
 const nodeCookie = require('node-cookie')
 const pathToRegexp = require('path-to-regexp')
-const useragent = require('useragent')
 const Macroable = require('macroable')
 const debug = require('debug')('adonis:request')
 
@@ -254,7 +253,7 @@ class Request extends Macroable {
     const ua = this.header('user-agent')
     const cc = this.header('cache-control')
 
-    return (useragent.is(ua).safari || useragent.is(ua).mobile_safari) && cc === 'max-age=0'
+    return ua.indexOf('Safari') > -1 && ua.indexOf('Chrome') === -1 && cc === 'max-age=0'
   }
 
   /**
