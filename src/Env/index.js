@@ -203,7 +203,7 @@ class Env {
       dotenvStringify(orderedProps)
     );
 
-    this.load(this.getEnvPath(), false);
+    this.load(this.getEnvPath());
     await util.promisify(lockFile.unlock)(tempLockFile);
 
     return orderedProps;
