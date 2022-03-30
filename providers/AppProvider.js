@@ -146,11 +146,12 @@ class AppProvider extends ServiceProvider {
     this.app.singleton('Adonis/Src/Server', (app) => {
       const Context = app.use('Adonis/Src/HttpContext')
       const Route = app.use('Adonis/Src/Route')
-      const Exception = app.use('Adonis/Src/Exception')
-      const Helpers = app.use('Adonis/Src/Helpers')
+      const Config = app.use('Adonis/Src/Config')
       const Logger = app.use('Adonis/Src/Logger')
+      const Exception = app.use('Adonis/Src/Exception')
+
       const Server = require('../src/Server')
-      return new Server(Context, Route, Logger, Exception, Helpers)
+      return new Server(Context, Route, Config, Logger, Exception)
     })
     this.app.alias('Adonis/Src/Server', 'Server')
   }

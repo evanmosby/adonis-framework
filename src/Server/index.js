@@ -16,6 +16,7 @@ const debug = require("debug")("adonis:framework");
 const GE = require("@adonisjs/generic-exceptions");
 const fs = require("fs");
 const MiddlewareBase = require("@adonisjs/middleware-base");
+const { setTimeout } = require('timers/promises');
 
 /**
  * The HTTP server class to start a new server and bind
@@ -31,9 +32,10 @@ const MiddlewareBase = require("@adonisjs/middleware-base");
  * @class Server
  */
 class Server {
-  constructor(Context, Route, Logger, Exception) {
+  constructor(Context, Route, Config, Logger, Exception) {
     this.Context = Context;
     this.Route = Route;
+    this.Config = Config;
     this.Logger = Logger;
     this.Exception = Exception;
 
@@ -108,7 +110,7 @@ class Server {
       .run()
   }
 
-  /**
+   /**
    * Invokes the route handler and uses the return to set the
    * response, only when not set already
    *
@@ -122,15 +124,31 @@ class Server {
    *
    * @private
    */
-  async _routeHandler (ctx, next, params) {
-    const { method } = resolver.forDir('httpControllers').resolveFunc(params[0])
-    const returnValue = await method(ctx)
-
-    this._safelySetResponse(ctx.response, returnValue)
-
-    await next()
-  }
-
+    async _routeHandler(ctx, next, params) {
+      const { method } = resolver.forDir("httpControllers").resolveFunc(params[0]);
+  
+      ctx.timeout = new AbortController();
+      const returnValue = await Promise.race([
+        method(ctx),
+        setTimeout(this.Config.get("app.http.timeout"), undefined, {
+          signal: ctx.timeout.signal,
+        })
+          .then(() => {
+            throw new GE.HttpException(`Request timed out after ${this.Config.get("app.http.timeout")} ms`,500,"E_SERVER_TIMEOUT");
+          })
+          .catch((err) => {
+            if (err.code === "ABORT_ERR") return;
+            else throw err;
+          }),
+      ]).finally(() => {
+        ctx.timeout.abort();
+      });
+  
+      this._safelySetResponse(ctx.response, returnValue);
+  
+      await next();
+    }
+    
   /**
    * Pulls the route for the current request. If missing
    * will throw an exception
