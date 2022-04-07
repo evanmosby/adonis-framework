@@ -136,7 +136,7 @@ class Server {
           signal: ctx.timeout.signal,
         })
           .then(() => {
-            throw new GE.HttpException(`Request timed out after ${this.Config.get("app.http.timeout")} ms`,500,"E_SERVER_TIMEOUT");
+            throw new GE.HttpException(`Request timed out after ${ctx.timeout} ms`,500,"E_SERVER_TIMEOUT");
           })
           .catch((err) => {
             if (err.code === "ABORT_ERR") return;
