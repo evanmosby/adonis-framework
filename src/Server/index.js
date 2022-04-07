@@ -127,10 +127,12 @@ class Server {
     async _routeHandler(ctx, next, params) {
       const { method } = resolver.forDir("httpControllers").resolveFunc(params[0]);
   
-      ctx.timeout = new AbortController();
+      ctx.abort = new AbortController();
+      ctx.timeout = ctx.timeout ?? this.Config.get("app.http.timeout")
+      
       const returnValue = await Promise.race([
         method(ctx),
-        setTimeout(this.Config.get("app.http.timeout"), undefined, {
+        setTimeout(ctx.timeout, undefined, {
           signal: ctx.timeout.signal,
         })
           .then(() => {
@@ -141,7 +143,7 @@ class Server {
             else throw err;
           }),
       ]).finally(() => {
-        ctx.timeout.abort();
+        ctx.abort.abort();
       });
   
       this._safelySetResponse(ctx.response, returnValue);
