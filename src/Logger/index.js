@@ -39,17 +39,15 @@ class Logger {
    *
    * @return {Object}
    */
-  get levels () {
+  get levels() {
     return {
-      emerg: 0,
-      alert: 1,
-      crit: 2,
-      error: 3,
-      warning: 4,
-      notice: 5,
-      info: 6,
-      debug: 7
-    }
+      severe: 0,
+      warning: 1,
+      info: 2,
+      fine: 3,
+      verbose: 4,
+      debug: 5,
+    };
   }
 
   /**
@@ -86,8 +84,50 @@ class Logger {
    *
    * @return {void}
    */
-  log (level, message, ...options) {
-    this.driver.log(level, message, ...options)
+  log(level, message, ...options) {
+    this.driver.log(level, message, ...options);
+  }
+
+  /**
+   * Log a message with severe level.
+   *
+   * @method severe
+   *
+   * @param  {String}    message
+   * @param  {...Spread} options
+   *
+   * @return {void}
+   */
+  severe(message, ...options) {
+    this.log(0, message, ...options);
+  }
+
+  /**
+   * Log a message with fine level.
+   *
+   * @method fine
+   *
+   * @param  {String}    message
+   * @param  {...Spread} options
+   *
+   * @return {void}
+   */
+  fine(message, ...options) {
+    this.log(3, message, ...options);
+  }
+
+  /**
+   * Log a message with verbose level.
+   *
+   * @method verbose
+   *
+   * @param  {String}    message
+   * @param  {...Spread} options
+   *
+   * @return {void}
+   */
+  verbose(message, ...options) {
+    this.log(4, message, ...options);
   }
 
   /**
@@ -100,8 +140,8 @@ class Logger {
    *
    * @return {void}
    */
-  debug (message, ...options) {
-    this.log(this.levels['debug'], message, ...options)
+  debug(message, ...options) {
+    this.log(5, message, ...options);
   }
 
   /**
@@ -114,8 +154,8 @@ class Logger {
    *
    * @return {void}
    */
-  info (message, ...options) {
-    this.log(this.levels['info'], message, ...options)
+  info(message, ...options) {
+    this.log(2, message, ...options);
   }
 
   /**
@@ -128,8 +168,8 @@ class Logger {
    *
    * @return {void}
    */
-  notice (message, ...options) {
-    this.log(this.levels['notice'], message, ...options)
+  notice(message, ...options) {
+    this.log(1, message, ...options);
   }
 
   /**
@@ -142,8 +182,8 @@ class Logger {
    *
    * @return {void}
    */
-  warning (message, ...options) {
-    this.log(this.levels['warning'], message, ...options)
+  warning(message, ...options) {
+    this.log(1, message, ...options);
   }
 
   /**
@@ -156,8 +196,8 @@ class Logger {
    *
    * @return {void}
    */
-  error (message, ...options) {
-    this.log(this.levels['error'], message, ...options)
+  error(message, ...options) {
+    this.log(0, message, ...options);
   }
 
   /**
@@ -170,8 +210,8 @@ class Logger {
    *
    * @return {void}
    */
-  crit (message, ...options) {
-    this.log(this.levels['crit'], message, ...options)
+  crit(message, ...options) {
+    this.log(0, message, ...options);
   }
 
   /**
@@ -184,8 +224,8 @@ class Logger {
    *
    * @return {void}
    */
-  alert (message, ...options) {
-    this.log(this.levels['alert'], message, ...options)
+  alert(message, ...options) {
+    this.log(0, message, ...options);
   }
 
   /**
@@ -198,9 +238,9 @@ class Logger {
    *
    * @return {void}
    */
-  emerg (message, ...options) {
-    this.log(this.levels['emerg'], message, ...options)
+  emerg(message, ...options) {
+    this.log(0, message, ...options);
   }
 }
 
-module.exports = Logger
+module.exports = Logger;

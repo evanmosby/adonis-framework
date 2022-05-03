@@ -47,6 +47,15 @@ class WinstonConsole {
       levels: this.levels,
       transports: [new winston.transports.Console(this.config)]
     })
+
+    winston.addColors({
+      severe: 'bold red',
+      warning: 'bold yellow',
+      info: 'bold blue',
+      fine: 'bold cyan',
+      verbose: 'bold gray',
+      debug: 'bold white',
+    });
   }
 
   /**
@@ -58,14 +67,12 @@ class WinstonConsole {
    */
   get levels () {
     return {
-      emerg: 0,
-      alert: 1,
-      crit: 2,
-      error: 3,
-      warning: 4,
-      notice: 5,
-      info: 6,
-      debug: 7
+      severe: 0,
+      warning: 1,
+      info: 2,
+      fine: 3,
+      verbose: 4,
+      debug: 5,
     }
   }
 
