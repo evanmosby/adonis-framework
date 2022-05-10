@@ -109,6 +109,7 @@ class RouteManager {
    * @param  {String}          route
    * @param  {Function|String} handler
    * @param  {Array}           verbs
+   * @param  {String}          clusterGroup
    *
    * @return {Route}
    *
@@ -117,8 +118,8 @@ class RouteManager {
    * Route.route('/', 'HomeController.render', ['GET'])
    * ```
    */
-  route (route, handler, verbs) {
-    const routeInstance = new Route(route, handler, verbs)
+  route (route, handler, verbs, clusterGroup) {
+    const routeInstance = new Route(route, handler, verbs, clusterGroup)
     RouteStore.add(routeInstance)
     return routeInstance
   }

@@ -11,6 +11,7 @@
 
 const http = require("http");
 const https = require("https");
+const httpProxy = require("http-proxy");
 const { resolver, ioc } = require("@adonisjs/fold");
 const debug = require("debug")("adonis:framework");
 const GE = require("@adonisjs/generic-exceptions");
@@ -47,6 +48,8 @@ class Server {
       "handle",
       this.Logger.warning.bind(this.Logger)
     );
+
+    this._proxy = process.env.WORKER_TYPE === "proxy"? httpProxy.createProxyServer({}) : null;
   }
 
   /**
@@ -526,6 +529,14 @@ class Server {
   handle (req, res) {
     const ctx = new this.Context(req, res)
     const { request, response } = ctx
+
+    // ADDS SPECIAL HANDLING FOR PROXY WORKER
+    if (this._proxy) {
+      const route = this._getRoute(ctx);
+      const group = this.Config.get(`app.cluster.groups.${route.route.clusterGroup}`);
+      const target = `http://localhost:${parseInt(process.env.HTTP_PORT) + group.portScale}`
+      return this._proxy.web(req, res, {target});
+    }
 
     debug('new request on %s url', request.url())
 

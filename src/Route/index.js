@@ -35,9 +35,9 @@ const Macroable = require('macroable')
  * ```
  */
 class Route extends Macroable {
-  constructor (route, handler, verbs = ['HEAD', 'GET']) {
+  constructor (route, handler, verbs = ['HEAD', 'GET'], clusterGroup = "default") {
     super()
-    this._instantiate(route, verbs, handler)
+    this._instantiate(route, verbs, handler, clusterGroup)
     this._makeRoutePattern()
   }
 
@@ -109,7 +109,7 @@ class Route extends Macroable {
    *
    * @private
    */
-  _instantiate (route, verbs, handler) {
+  _instantiate (route, verbs, handler, clusterGroup) {
     this._validateRoute(route)
     this._validateVerbs(verbs)
     this._validateHandler(handler)
@@ -131,6 +131,7 @@ class Route extends Macroable {
     this.forDomain = null
     this.middlewareList = []
     this.domainKeys = []
+    this.clusterGroup = clusterGroup
   }
 
   /**

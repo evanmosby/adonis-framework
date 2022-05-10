@@ -57,6 +57,7 @@
     "edge.js": "^1.1.4",
     "eventemitter2": "^5.0.1",
     "haye": "^2.0.2",
+    "http-proxy": "^1.18.1",
     "lockfile": "^1.0.4",
     "lodash": "^4.17.11",
     "macroable": "^1.0.0",
