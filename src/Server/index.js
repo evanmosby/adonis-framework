@@ -49,7 +49,7 @@ class Server {
       this.Logger.warning.bind(this.Logger)
     );
 
-    this._proxy = process.env.WORKER_TYPE === "proxy"? httpProxy.createProxyServer({}) : null;
+    this._proxy = process.env.HTTP_PROXY_ENABLED === "true" ? httpProxy.createProxyServer({}) : null;
   }
 
   /**
@@ -530,9 +530,10 @@ class Server {
     const ctx = new this.Context(req, res)
     const { request, response } = ctx
 
-    // ADDS SPECIAL HANDLING FOR PROXY WORKER
-    if (this._proxy) {
-      const route = this._getRoute(ctx);
+    const route = this._getRoute(ctx)
+    
+    // Handle for proxy requests to another worker type
+    if (route.route.clusterGroup !== process.env.WORKER_TYPE){
       const group = this.Config.get(`app.cluster.groups.${route.route.clusterGroup}`);
       const target = `http://localhost:${parseInt(process.env.HTTP_PORT) + group.portScale}`
       return this._proxy.web(req, res, {target});
@@ -554,7 +555,15 @@ class Server {
           return
         }
 
-        const route = this._getRoute(ctx)
+        // Moved this up above to account for proxy... not sure if this is 100% OK
+        // const route = this._getRoute(ctx)
+
+        if (route.route.clusterGroup !== process.env.WORKER_TYPE){
+          const group = this.Config.get(`app.cluster.groups.${route.route.clusterGroup}`);
+          const target = `http://localhost:${parseInt(process.env.HTTP_PORT) + group.portScale}`
+          return this._proxy.web(req, res, {target});
+        }
+
         return this._executeRouteHandler(route.route.middlewareList, ctx, {
           namespace: this._routeHandler.bind(this),
           params: [route.route.handler]
