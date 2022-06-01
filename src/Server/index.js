@@ -48,8 +48,11 @@ class Server {
       "handle",
       this.Logger.warning.bind(this.Logger)
     );
+    const config = {
+      ws: true,
+    };
 
-    this._proxy = process.env.HTTP_PROXY_ENABLED === "true" ? httpProxy.createProxyServer({}) : null;
+    this._proxy = process.env.HTTP_PROXY_ENABLED === "true" ? httpProxy.createProxyServer(config) : null;
   }
 
   /**
@@ -129,10 +132,10 @@ class Server {
    */
     async _routeHandler(ctx, next, params) {
       const { method } = resolver.forDir("httpControllers").resolveFunc(params[0]);
-  
+
       ctx.abort = new AbortController();
       ctx.timeout = ctx.timeout ?? this.Config.get("app.http.timeout")
-      
+
       const returnValue = await Promise.race([
         method(ctx),
         setTimeout(ctx.timeout, undefined, {
@@ -148,12 +151,12 @@ class Server {
       ]).finally(() => {
         ctx.abort.abort();
       });
-  
+
       this._safelySetResponse(ctx.response, returnValue);
-  
+
       await next();
     }
-    
+
   /**
    * Pulls the route for the current request. If missing
    * will throw an exception
@@ -402,6 +405,7 @@ class Server {
     if (!this._httpInstance) {
       this._httpInstance = http.createServer(this.handle.bind(this));
     }
+
     return this._httpInstance;
   }
 
@@ -531,7 +535,7 @@ class Server {
     const { request, response } = ctx
 
     const route = this._getRoute(ctx)
-    
+
     // Handle for proxy requests to another worker type
     if (route.route.clusterGroup !== process.env.WORKER_TYPE){
       const group = this.Config.get(`app.cluster.groups.${route.route.clusterGroup}`);
@@ -612,8 +616,16 @@ class Server {
       this.bindExceptionHandler();
     }
 
-    this.Logger.info(`serving app on http://${host}:${port}`);
-    return this.getHttpClusterWorkerInstance().listen(port, host, callback);
+    this.Logger.info(`serving app on http://${host}:${port} (${process.env.WORKER_TYPE})`);
+    const server = this.getHttpClusterWorkerInstance();
+    if (process.env.HTTP_PROXY_ENABLED === "true" && process.env.WORKER_TYPE !== "utility"){
+        const group = this.Config.get(`app.cluster.groups.utility`);
+        const target = `http://localhost:${parseInt(process.env.HTTP_PORT) + group.portScale}`
+        server.on('upgrade', function (req, socket, head) {
+        this._proxy.ws(req, socket, head, {target});
+      }.bind(this));
+    }
+    return server.listen(port, host, callback);
   }
 
   /**
@@ -632,8 +644,16 @@ class Server {
       this.bindExceptionHandler();
     }
 
-    this.Logger.info(`serving app on http://${host}:${port}`);
-    return this.getHttpInstance().listen(port, host, callback);
+    this.Logger.info(`serving app on http://${host}:${port} (${process.env.WORKER_TYPE})`);
+    const server = this.getHttpInstance();
+    if (process.env.HTTP_PROXY_ENABLED === "true" && process.env.WORKER_TYPE !== "utility"){
+        const group = this.Config.get(`app.cluster.groups.utility`);
+        const target = `http://localhost:${parseInt(process.env.HTTP_PORT) + group.portScale}`
+        server.on('upgrade', function (req, socket, head) {
+        this._proxy.ws(req, socket, head, {target});
+      }.bind(this));
+    }
+    return server.listen(port, host, callback);
   }
 
   /**
@@ -658,8 +678,16 @@ class Server {
       this.bindExceptionHandler();
     }
 
-    this.Logger.info(`serving app on https://${host}:${port}`);
-    return this.getHttpsInstance(pfxPath, pfxPassphrase).listen(
+    this.Logger.info(`serving app on https://${host}:${port} (${process.env.WORKER_TYPE})`);
+    const server = this.getHttpsInstance(pfxPath, pfxPassphrase);
+    if (process.env.HTTP_PROXY_ENABLED === "true" && process.env.WORKER_TYPE !== "utility"){
+        const group = this.Config.get(`app.cluster.groups.utility`);
+        const target = `http://localhost:${parseInt(process.env.HTTP_PORT) + group.portScale}`
+        server.on('upgrade', function (req, socket, head) {
+        this._proxy.ws(req, socket, head, {target});
+      }.bind(this));
+    }
+    return server.listen(
       port,
       host,
       callback
