@@ -50,6 +50,7 @@ class Server {
     );
     const config = {
       ws: true,
+      xfwd: true,
     };
 
     this._proxy = process.env.HTTP_PROXY_ENABLED === "true" ? httpProxy.createProxyServer(config) : null;
@@ -618,10 +619,10 @@ class Server {
 
     this.Logger.info(`serving app on http://${host}:${port} (${process.env.WORKER_TYPE})`);
     const server = this.getHttpClusterWorkerInstance();
-    if (process.env.HTTP_PROXY_ENABLED === "true" && process.env.WORKER_TYPE !== "utility"){
-        const group = this.Config.get(`app.cluster.groups.utility`);
-        const target = `http://localhost:${parseInt(process.env.HTTP_PORT) + group.portScale}`
-        server.on('upgrade', function (req, socket, head) {
+    if (process.env.HTTP_PROXY_ENABLED === "true"){
+      const group = Object.entries(this.Config.get(`app.cluster.groups`)).find(([ group, val ]) => val.websocket === true)[1];
+      const target = `http://localhost:${parseInt(process.env.HTTP_PORT) + group.portScale}`
+      server.on('upgrade', function (req, socket, head) {
         this._proxy.ws(req, socket, head, {target});
       }.bind(this));
     }
@@ -646,10 +647,10 @@ class Server {
 
     this.Logger.info(`serving app on http://${host}:${port} (${process.env.WORKER_TYPE})`);
     const server = this.getHttpInstance();
-    if (process.env.HTTP_PROXY_ENABLED === "true" && process.env.WORKER_TYPE !== "utility"){
-        const group = this.Config.get(`app.cluster.groups.utility`);
-        const target = `http://localhost:${parseInt(process.env.HTTP_PORT) + group.portScale}`
-        server.on('upgrade', function (req, socket, head) {
+    if (process.env.HTTP_PROXY_ENABLED === "true"){
+      const group = Object.entries(this.Config.get(`app.cluster.groups`)).find(([ group, val ]) => val.websocket === true)[1];
+      const target = `http://localhost:${parseInt(process.env.HTTP_PORT) + group.portScale}`
+      server.on('upgrade', function (req, socket, head) {
         this._proxy.ws(req, socket, head, {target});
       }.bind(this));
     }
@@ -680,10 +681,10 @@ class Server {
 
     this.Logger.info(`serving app on https://${host}:${port} (${process.env.WORKER_TYPE})`);
     const server = this.getHttpsInstance(pfxPath, pfxPassphrase);
-    if (process.env.HTTP_PROXY_ENABLED === "true" && process.env.WORKER_TYPE !== "utility"){
-        const group = this.Config.get(`app.cluster.groups.utility`);
-        const target = `http://localhost:${parseInt(process.env.HTTP_PORT) + group.portScale}`
-        server.on('upgrade', function (req, socket, head) {
+    if (process.env.HTTP_PROXY_ENABLED === "true"){
+      const group = Object.entries(this.Config.get(`app.cluster.groups`)).find(([ group, val ]) => val.websocket === true)[1];
+      const target = `http://localhost:${parseInt(process.env.HTTP_PORT) + group.portScale}`
+      server.on('upgrade', function (req, socket, head) {
         this._proxy.ws(req, socket, head, {target});
       }.bind(this));
     }
