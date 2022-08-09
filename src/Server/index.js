@@ -135,7 +135,7 @@ class Server {
       const { method } = resolver.forDir("httpControllers").resolveFunc(params[0]);
 
       ctx.abort = new AbortController();
-      ctx.timeout = ctx.timeout ?? this.Config.get("app.http.timeout")
+      ctx.timeout = ctx.timeout ?? this.Config.get("app.http.requestTimeout")
 
       const returnValue = await Promise.race([
         method(ctx),
@@ -654,6 +654,7 @@ class Server {
         this._proxy.ws(req, socket, head, {target});
       }.bind(this));
     }
+    server.keepAliveTimeout = process.env.HTTP_KEEP_ALIVE_TIMEOUT;
     return server.listen(port, host, callback);
   }
 
