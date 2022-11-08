@@ -35,7 +35,7 @@ const Macroable = require('macroable')
  * ```
  */
 class Route extends Macroable {
-  constructor (route, handler, verbs = ['HEAD', 'GET'], clusterGroup = "default") {
+  constructor (route, handler, verbs = ['HEAD', 'GET'], clusterGroup) {
     super()
     this._instantiate(route, verbs, handler, clusterGroup)
     this._makeRoutePattern()

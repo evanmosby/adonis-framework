@@ -538,7 +538,7 @@ class Server {
     const route = this._getRoute(ctx)
 
     // Handle for proxy requests to another worker type
-    if (route.route.clusterGroup !== process.env.WORKER_TYPE){
+    if (route.route.clusterGroup && route.route.clusterGroup !== process.env.WORKER_TYPE){
       const group = this.Config.get(`app.cluster.groups.${route.route.clusterGroup}`);
       const target = `http://localhost:${parseInt(process.env.HTTP_PORT) + group.portScale}`
       return this._proxy.web(req, res, {target});
@@ -563,7 +563,7 @@ class Server {
         // Moved this up above to account for proxy... not sure if this is 100% OK
         // const route = this._getRoute(ctx)
 
-        if (route.route.clusterGroup !== process.env.WORKER_TYPE){
+        if (route.route.clusterGroup && route.route.clusterGroup !== process.env.WORKER_TYPE){
           const group = this.Config.get(`app.cluster.groups.${route.route.clusterGroup}`);
           const target = `http://localhost:${parseInt(process.env.HTTP_PORT) + group.portScale}`
           return this._proxy.web(req, res, {target});
